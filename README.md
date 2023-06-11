@@ -12,7 +12,7 @@ We hope Xiezhi could help developers track the progress and analyze the importan
 - Authors are urgently in preparing for EMNLP-2023, more detail of Xiezhi Benchmark will be released later on.
 
 - [Leaderboard](#leaderboard)
-- [Experiment Setting](#experiment setting)
+- [Experiment Setting](#experiment-setting)
 - [Data](#data)
 - [TODO](#todo)
 - [Licenses](#licenses)
