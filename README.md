@@ -78,21 +78,16 @@ The Xiezhi dataset is licensed under a
 
 
 
-[//]: # (## Citation)
+## Citation
 
-[//]: # ()
-[//]: # (Please cite our paper if you use our dataset.)
 
-[//]: # (```)
+Please cite our paper if you use our dataset.
 
-[//]: # (@article{gu2023xiezhi,)
-
-[//]: # (title={Xiezhi: An Ever-Updating Benchmark for Holistic Domain Knowledge Evaluation}, )
-
-[//]: # (author={Zhouhong Gu})
-
-[//]: # (year={2023})
-
-[//]: # (})
-
-[//]: # (```)
+```
+@article{gu2023xiezhi,
+title={Xiezhi: An Ever-Updating Benchmark for Holistic Domain Knowledge Evaluation}, 
+author={Zhouhong, Gu and Xiaoxuan, Zhu and Haoning, Ye and Lin, Zhang and Jianchen, Wang and Sihang, Jiang and Zhuozhi, Xiong and Zihan, Li and Qianyu, He and Rui, Xu and Wenhao, Huang and Weiguo, Zheng and Hongwei, Feng and Yanghua, Xiao}
+journal={arXiv:2304.11679},
+year={2023}
+}
+```
