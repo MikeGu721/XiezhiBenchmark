@@ -1,6 +1,6 @@
 <p align="center"> <img src="resources/title.png" style="width: 100%;" id="title-icon">       </p>
 
-Xiezhi is a comprehensive evaluation suite for Language Models (LMs). It consists of 249587 multi-choice questions spanning 516 diverse disciplines and four difficulty levels, as shown below. Please check our [paper](https://arxiv.org/abs/2306.05783) for more details, and our **website** will be open later on. 
+Xiezhi (獬豸) is a comprehensive evaluation suite for Language Models (LMs). It consists of 249587 multi-choice questions spanning 516 diverse disciplines and four difficulty levels, as shown below. Please check our [paper](https://arxiv.org/abs/2306.05783) for more details, and our **website** will be open later on. 
 
 We hope Xiezhi could help developers track the progress and analyze the important strengths/shortcomings of their LMs.
 
