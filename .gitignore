@@ -1,3 +1,8 @@
 ./venv
 ./resources/data/xiezhi_all
 .idea
+./Tester/tasks/ceval/
+./Tester/tasks/ceval_train/
+./Tester/tasks/m3ke/
+./Tester/tasks/mmlu/
+./Tester/tasks/mmlu_train/

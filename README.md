@@ -14,6 +14,7 @@ We hope Xiezhi could help developers track the progress and analyze the importan
 - [Leaderboard](#leaderboard)
 - [Experiment Setting](#experiment-setting)
 - [Data](#data)
+- [How To Run Your Own Test](#how-to-run-your-own-test)
 - [TODO](#todo)
 - [Licenses](#licenses)
 - [Citation](#citation)
@@ -60,6 +61,9 @@ Example of question in Xiezhi Interdiscipline:
 
 Example of our few-shot learning setting:
 <p align="center"> <img src="resources/question-3shot.png" style="width: 100%;" id="question-3shot"></p>
+
+## How To Run Your Own Test
+- 
 
 ## TODO
 - [ ] add results of traditional 4 options experiments setting
