@@ -9,7 +9,6 @@ We hope Xiezhi could help developers track the progress and analyze the importan
 
 
 ## Table of Contents
-- Authors are urgently in preparing for EMNLP-2023, more detail of Xiezhi Benchmark will be released later on.
 
 - [Leaderboard](#leaderboard)
 - [Experiment Setting](#experiment-setting)
@@ -63,7 +62,9 @@ Example of our few-shot learning setting:
 <p align="center"> <img src="resources/question-3shot.png" style="width: 100%;" id="question-3shot"></p>
 
 ## How To Run Your Own Test
-- 
+- The testing can be performed on a set of models including C-Eval, M3KE, MMLU, Xiezhi-Inter, and Xiezhi-Spec, all of which are contained within the `./Tester/model_test.py` file.
+- Anyone can simply run `./Tester/test.sh` to do the evaluation
+- For your own data, you need to rewrite the `_get_data` function in `./Tester/model_test.py`
 
 ## TODO
 - [ ] add results of traditional 4 options experiments setting
