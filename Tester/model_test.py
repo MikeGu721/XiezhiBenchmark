@@ -413,9 +413,9 @@ class ModelTester:
 
         if self.few_shot > 0:
             if 'eng' in self.task:
-                label2examples = self.get_traindata(os.path.join('tasks', 'xiezhi_eng_train'))
+                label2examples = self.get_traindata(os.path.join('tasks', 'xiezhi_train_eng'))
             else:
-                label2examples = self.get_traindata(os.path.join('tasks', 'xiezhi_train'))
+                label2examples = self.get_traindata(os.path.join('tasks', 'xiezhi_train_chn'))
 
         answer_datasets = TestDataset()
         for id, question, options, answer, label in tqdm.tqdm(data, ncols=80,
@@ -702,7 +702,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', '-t',
                         default=
-                        ['ceval', 'mmlu', 'm3ke', 'xiezhi_inter', 'xiezhi_spec', 'xiezhi_inter_eng', 'xiezhi_spec_eng'][
+                        ['ceval', 'mmlu', 'm3ke', 'xiezhi_inter_chn', 'xiezhi_spec_chn', 'xiezhi_inter_eng', 'xiezhi_spec_eng'][
                             4])
     parser.add_argument('--model_name', '-mn', default='bigscience/bloomz-7b1')
     parser.add_argument('--model_cache_dir', '-mc', default='../LLM/CACHE_DIR')
@@ -746,9 +746,9 @@ if __name__ == '__main__':
     num_beams = args.num_beams
     max_new_tokens = args.max_new_tokens
 
-    if few_shot > 0 and task.startswith('xiezhi') and language == 'chn':  # 只有xiezhi提供few shot demonstration
+    if few_shot > 0 and language == 'chn':  # 只有xiezhi提供few shot demonstration
         input_template = cn_multiple_choice_demonstration_template
-    elif few_shot > 0 and task.startswith('xiezhi') and language == 'eng':  # 只有xiezhi提供few shot demonstration
+    elif few_shot > 0 and language == 'eng':  # 只有xiezhi提供few shot demonstration
         input_template = en_multiple_choice_demonstration_template
     elif language == 'chn':
         input_template = cn_multiple_choice_template
