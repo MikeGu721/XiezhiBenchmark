@@ -1,5 +1,0 @@
-openai
-huggingface_hub
-transformers
-accelerate
-sentencepiece

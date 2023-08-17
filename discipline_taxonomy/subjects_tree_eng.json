@@ -1,0 +1,625 @@
+{
+    "Philosophy": {
+        "Philosophy (Level 1 subject)": [
+            "Marxist Philosophy",
+            "Chinese Philosophy",
+            "Foreign Philosophy",
+            "Logic",
+            "Ethics",
+            "Aesthetics",
+            "Religion",
+            "Philosophy of Science and Technology"
+        ]
+    },
+    "Economics": {
+        "Applied Economics": [
+            "National Economics",
+            "Regional Economics",
+            "Finance (including: Taxation)",
+            "Finance (including: Insurance)",
+            "Industrial Economics",
+            "International Trade",
+            "Labour economics",
+            "Statistics",
+            "Quantitative Economics",
+            "Defence Economics"
+        ],
+        "Theoretical Economics": [
+            "Political Economy",
+            "History of Economic Thought",
+            "Economic history",
+            "Western economics",
+            "World Economics",
+            "Population, Resource and Environmental Economics"
+        ]
+    },
+    "Jurisprudence": {
+        "Public Security": [],
+        "Political Science": [
+            "Political Science Theory",
+            "Chinese and Foreign Political Systems",
+            "Scientific Socialism and the International Communist Movement",
+            "History of the Chinese Communist Party (including: Party Doctrine and Party Building)",
+            "Marxist Theory and Ideological and Political Education",
+            "International Politics",
+            "International Relations",
+            "Diplomacy"
+        ],
+        "Ethnology": [
+            "Ethnology (Level 2 subject)",
+            "Marxist Ethnic Theory and Policy",
+            "Economics of China's Ethnic Minorities",
+            "History of Ethnic Minorities in China",
+            "Chinese Ethnic Minority Art"
+        ],
+        "Law (Level 1 subject)": [
+            "Legal Theory",
+            "History of Law",
+            "Constitutional and Administrative Jurisprudence",
+            "Criminal Law",
+            "Civil and Commercial Law (including: Labour Law, Social Security Law)",
+            "Litigation Law",
+            "Economic Law",
+            "Environmental and Resource Protection Law",
+            "International Law (including: Public International Law, Private International Law, International Economic Law)",
+            "Military Law"
+        ],
+        "Sociology": [
+            "Sociology (Level 2 discipline)",
+            "Demography",
+            "Anthropology",
+            "Folklore (including: Chinese folklore)"
+        ],
+        "Marxist Theory": []
+    },
+    "Pedagogy": {
+        "Kinesiology": [
+            "Humanities and Sociology of Sport",
+            "Sports Human Sciences",
+            "Physical Education and Training",
+            "Traditional Folk Sports"
+        ],
+        "Psychology": [
+            "Basic Psychology",
+            "Developmental and Educational Psychology",
+            "Applied Psychology"
+        ],
+        "Pedagogy (Level 1 subject)": [
+            "Principles of Education",
+            "Curriculum and Pedagogy",
+            "History of Education",
+            "Comparative Pedagogy",
+            "Pre-school Pedagogy",
+            "Higher Education",
+            "Adult Education",
+            "Vocational and Technical Education",
+            "Special Education",
+            "Educational Technology"
+        ]
+    },
+    "Literature": {
+        "Chinese Language and Literature": [
+            "Literary Arts",
+            "Linguistics and Applied Linguistics",
+            "Chinese Language and Literature",
+            "Chinese Classical Literature",
+            "Ancient Chinese Literature",
+            "Chinese Modern and Contemporary Literature",
+            "Chinese Minority Languages and Literatures",
+            "Comparative Literature and World Literature"
+        ],
+        "Foreign Languages and Literatures": [
+            "English Language and Literature",
+            "Russian Language and Literature",
+            "French Language and Literature",
+            "German Language and Literature",
+            "Japanese Language and Literature",
+            "Indian Languages and Literatures",
+            "Spanish Language and Literature",
+            "Arabic Language and Literature",
+            "European Languages and Literatures",
+            "Asian and African Languages and Literatures",
+            "Foreign Languages and Applied Linguistics"
+        ],
+        "Journalism and Communication": [
+            "Journalism",
+            "Communication Studies"
+        ],
+        "Language and Literature": []
+    },
+    "History": {
+        "World History": [],
+        "History of China": [],
+        "History (Level 1 subject)": [
+            "Historical theory and history of history",
+            "Archaeology and Museology",
+            "Historical Geography",
+            "Historical Documentation",
+            "Specialised History",
+            "Ancient Chinese History",
+            "Modern Chinese History",
+            "World History"
+        ],
+        "Archaeology": []
+    },
+    "Science": {
+        "History of Science and Technology": [
+            "History of Science and Technology (Level 2 subject)"
+        ],
+        "Chemistry": [
+            "Inorganic chemistry",
+            "Analytical chemistry",
+            "Organic chemistry",
+            "Physical Chemistry",
+            "Polymer chemistry and physics"
+        ],
+        "Geophysics": [
+            "Solid State Geophysics",
+            "Space physics"
+        ],
+        "Geography": [
+            "Physical Geography",
+            "Human Geography",
+            "Cartography and GIS"
+        ],
+        "Geology": [
+            "Mineralogy",
+            "Petrology",
+            "Ore Deposits",
+            "Geochemistry",
+            "Palaeontology and Stratigraphy",
+            "Palaeoanthropology",
+            "Tectonic Geology",
+            "Quaternary Geology"
+        ],
+        "Atmospheric Sciences": [
+            "Meteorology",
+            "Atmospheric Physics and Atmospheric Environment"
+        ],
+        "Astronomy": [
+            "Astrophysics",
+            "Astrometry and Celestial Mechanics"
+        ],
+        "Mathematics": [
+            "Basic Mathematics",
+            "Computational Mathematics",
+            "Probability Theory and Mathematical Statistics",
+            "Applied Mathematics",
+            "Operations Research and Cybernetics"
+        ],
+        "Marine Science": [
+            "Physical Oceanography",
+            "Marine Chemistry",
+            "Marine Biology",
+            "Marine Geology"
+        ],
+        "Physics": [
+            "Theoretical Physics",
+            "Particle Physics and Atomic Nucleus Physics",
+            "Atomic and molecular physics",
+            "Plasma physics",
+            "Condensed Matter Physics",
+            "Acoustics",
+            "Optics",
+            "Radio physics"
+        ],
+        "Ecology": [],
+        "Biology": [
+            "Botany",
+            "Zoology",
+            "Physiology",
+            "Aquatic Biology",
+            "Microbiology",
+            "Neurobiology",
+            "Genetics",
+            "Developmental Biology",
+            "Cell Biology",
+            "Biochemistry and Molecular Biology",
+            "Biophysics",
+            "Ecology"
+        ],
+        "Systems Science": [
+            "Systems Theory",
+            "Systems Analysis and Integration"
+        ],
+        "Statistics": []
+    },
+    "Engineering": {
+        "Optical Engineering": [
+            "Optical Engineering (Level 2 discipline)"
+        ],
+        "Biomedical Engineering": [
+            "Biomedical Engineering (Level 2 discipline)"
+        ],
+        "Traffic and Transport Engineering": [
+            "Road and Railway Engineering",
+            "Traffic Information Engineering and Control",
+            "Transport Planning and Management",
+            "Vehicle Operation Engineering"
+        ],
+        "Instrument Science and Technology": [
+            "Precision Instruments and Machinery",
+            "Test and Measurement Technology and Instrumentation"
+        ],
+        "Information and Communication Engineering": [
+            "Communication and Information Systems",
+            "Signal and Information Processing"
+        ],
+        "Weapons Science and Technology": [
+            "Weapon Systems and Operations Engineering",
+            "Weapon Launch Theory and Technology",
+            "Artillery, Automatic Weapons and Ammunition Engineering",
+            "Military Chemistry and Pyrotechnics"
+        ],
+        "Agricultural Engineering": [
+            "Agricultural Mechanization Engineering",
+            "Agricultural Soil and Water Engineering",
+            "Agricultural Bioenvironmental and Energy Engineering",
+            "Agricultural Electrification and Automation"
+        ],
+        "Metallurgical Engineering": [
+            "Metallurgical Physical Chemistry"
+        ],
+        "Mechanics": [
+            "General Mechanics",
+            "Solid Mechanics",
+            "Fluid Mechanics",
+            "Engineering Mechanics"
+        ],
+        "Power Engineering and Engineering Thermophysics": [
+            "Engineering Thermophysics",
+            "Thermal Engineering",
+            "Power Mechanics and Engineering",
+            "Fluid Mechanics and Engineering",
+            "Refrigeration and Cryogenic Engineering",
+            "Chemical Process Machinery"
+        ],
+        "Chemical Engineering and Technology": [
+            "Chemical Engineering",
+            "Chemical Processes",
+            "Biochemistry",
+            "Applied Chemistry",
+            "Industrial Catalysis"
+        ],
+        "Civil Engineering": [
+            "Geotechnical Engineering",
+            "Structural Engineering",
+            "Municipal Engineering",
+            "Heating, Gas, Ventilation and Air Conditioning Engineering",
+            "Disaster Prevention and Mitigation Engineering and Protection Engineering",
+            "Bridge and Tunnel Engineering"
+        ],
+        "Geological Resources and Geological Engineering": [
+            "Mineral Census and Exploration",
+            "Earth Exploration and Information Technology",
+            "Geological Engineering"
+        ],
+        "Urban and Rural Planning": [],
+        "Safety Science and Engineering": [],
+        "Architecture": [
+            "History and Theory of Architecture",
+            "Architectural Design and Theory",
+            "Urban Planning and Design (including: Landscape Architecture Planning and Design)",
+            "Building Technology Science"
+        ],
+        "Control Science and Engineering": [
+            "Control Theory and Control Engineering",
+            "Testing Technology and Automation",
+            "Systems Engineering",
+            "Pattern Recognition and Intelligent Systems",
+            "Navigation, Guidance and Control"
+        ],
+        "Mechanical Engineering": [
+            "Mechanical Manufacturing and Automation",
+            "Mechatronics Engineering",
+            "Mechanical Design and Theory",
+            "Vehicle Engineering"
+        ],
+        "Materials Science and Engineering": [
+            "Materials Physics and Chemistry",
+            "Materials Science",
+            "Materials Processing Engineering"
+        ],
+        "Forestry Engineering": [
+            "Forest Engineering",
+            "Wood Science and Technology",
+            "Forestry Chemical Processing Engineering"
+        ],
+        "Nuclear Science and Technology": [
+            "Nuclear Energy Science and Engineering",
+            "Nuclear Fuel Cycle and Materials",
+            "Nuclear Technology and Applications",
+            "Radiation Protection and Environmental Protection"
+        ],
+        "Water Resources Engineering": [
+            "Hydrology and Water Resources",
+            "Hydraulics and River Dynamics",
+            "Hydraulic Structural Engineering",
+            "Hydraulic and Hydroelectric Engineering",
+            "Port, Coastal and Offshore Engineering"
+        ],
+        "Mapping Science and Technology": [
+            "Geodesy and Surveying Engineering",
+            "Photogrammetry and Remote Sensing",
+            "Cartography and Geographic Information Engineering"
+        ],
+        "Environmental Science and Engineering": [
+            "Environmental Science",
+            "Environmental Engineering"
+        ],
+        "Bioengineering": [],
+        "Electronic Science and Technology": [
+            "Physical Electronics",
+            "Circuits and Systems",
+            "Microelectronics and Solid State Electronics",
+            "Electromagnetic Field and Microwave Technology"
+        ],
+        "Electrical Engineering": [
+            "Electrical Machines and Appliances",
+            "Power Systems and Automation",
+            "High Voltage and Insulation Technology",
+            "Power Electronics and Power Transmission",
+            "Electrical Engineering Theory and New Technology"
+        ],
+        "Petroleum and Natural Gas Engineering": [
+            "Oil and Gas Well Engineering",
+            "Oil and Gas Field Development Engineering",
+            "Oil and Gas Storage and Transportation Engineering"
+        ],
+        "Mining Engineering": [
+            "Mining Engineering",
+            "Mineral Processing Engineering",
+            "Safety Technology and Engineering"
+        ],
+        "Textile Science and Engineering": [
+            "Textile Engineering",
+            "Textile Materials and Textile Design",
+            "Textile Chemistry and Dyeing and Finishing Engineering",
+            "Clothing"
+        ],
+        "Cyberspace Security": [],
+        "Aerospace Science and Technology": [
+            "Aircraft Design",
+            "Aerospace Propulsion Theory and Engineering",
+            "Aerospace Manufacturing Engineering",
+            "Human-Machine and Environmental Engineering"
+        ],
+        "Marine and Offshore Engineering": [
+            "Ship and Marine Structures Design and Manufacture",
+            "Turbine Engineering",
+            "Hydroacoustic Engineering"
+        ],
+        "Computer Science and Technology": [
+            "Computer System Architecture",
+            "Computer Software and Theory",
+            "Computer Application Technology"
+        ],
+        "Software Engineering": [],
+        "Light Industry Technology and Engineering": [
+            "Pulp and Paper Engineering",
+            "Sugar Engineering",
+            "Fermentation Engineering",
+            "Leather Chemistry and Engineering"
+        ],
+        "Iron and Steel Metallurgy": [
+            "Non-Ferrous Metallurgy"
+        ],
+        "Landscape Architecture": [],
+        "Food Science and Engineering": [
+            "Food Science",
+            "Grain, Oil and Vegetable Protein Engineering",
+            "Agricultural Products Processing and Storage Engineering",
+            "Fish Processing and Storage Engineering"
+        ]
+    },
+    "Agronomy": {
+        "Crop Science": [
+            "Crop Cultivation and Farming",
+            "Crop Genetics and Breeding"
+        ],
+        "Veterinary Medicine": [
+            "Basic Veterinary Medicine",
+            "Preventive Veterinary Medicine",
+            "Clinical Veterinary Medicine"
+        ],
+        "Agricultural Resource Utilisation": [
+            "Soil Science",
+            "Plant Nutrition"
+        ],
+        "Horticulture": [
+            "Fruit Tree Science",
+            "Vegetable Science",
+            "Tea"
+        ],
+        "Forestry": [
+            "Forest Genetic Breeding",
+            "Forest Breeding",
+            "Forest Conservation",
+            "Forest Management",
+            "Wildlife Conservation and Utilisation",
+            "Landscape Plants and Ornamental Horticulture",
+            "Soil and Water Conservation and Desertification Control"
+        ],
+        "Plant Protection": [
+            "Plant Pathology",
+            "Agricultural Insects and Pest Control",
+            "Pesticides"
+        ],
+        "Aquaculture": [
+            "Aquaculture",
+            "Capture Science",
+            "Fishery Resources"
+        ],
+        "Animal Husbandry": [
+            "Animal Genetic Breeding and Reproduction",
+            "Animal Nutrition and Feed Science",
+            "Grassland Science",
+            "Special economic animal husbandry (including: silkworms, bees, etc.)"
+        ],
+        "Herbology": []
+    },
+    "Medicine": {
+        "Traditional Chinese Medicine": [
+            "Chinese herbal medicine (Level 2 discipline)"
+        ],
+        "Chinese Medicine": [
+            "Basic Theory of Chinese Medicine",
+            "Clinical Foundations of Chinese Medicine",
+            "Chinese Medical History and Literature",
+            "Formulary",
+            "Diagnostics of Chinese Medicine",
+            "Internal Medicine",
+            "External Medicine",
+            "Orthopaedics and Traumatology of Chinese Medicine",
+            "TCM Gynecology",
+            "TCM Paediatrics",
+            "Traditional Chinese Medicine",
+            "Acupuncture, Moxibustion and Tuina",
+            "Ethnic Medicine"
+        ],
+        "Combination of Chinese and Western Medicine": [
+            "Fundamentals of Integrated Chinese and Western Medicine",
+            "Combined Chinese and Western Medicine Clinical"
+        ],
+        "Clinical Medicine": [
+            "Internal Medicine",
+            "Pediatrics",
+            "Geriatric Medicine",
+            "Neurology",
+            "Psychiatry and Mental Health",
+            "Dermatology and Venereology",
+            "Imaging Medicine and Nuclear Medicine",
+            "Diagnostic Clinical Laboratory Medicine",
+            "Nursing",
+            "Surgery",
+            "Obstetrics and Gynaecology",
+            "Ophthalmology",
+            "Otorhinolaryngology",
+            "Oncology",
+            "Rehabilitation Medicine and Physiotherapy",
+            "Sports Medicine",
+            "Anaesthesiology",
+            "Emergency Medicine"
+        ],
+        "Public Health and Preventive Medicine": [
+            "Epidemiology and Health Statistics",
+            "Labour Hygiene and Environmental Health",
+            "Nutrition and Food Hygiene",
+            "Paediatric and Child Health and Maternal and Child Health",
+            "Health Toxicology",
+            "Military Preventive Medicine"
+        ],
+        "Dentistry": [
+            "Basic Dental Medicine",
+            "Dental Clinical Medicine"
+        ],
+        "Basic Medicine": [
+            "Human Anatomy and Histoplasty",
+            "Immunology",
+            "Pathogenic Biology",
+            "Pathology and Pathophysiology",
+            "Forensic Medicine",
+            "Radiological Medicine",
+            "Aviation, Aerospace and Maritime Medicine"
+        ],
+        "Nursing": [],
+        "Speciality Medicine": [],
+        "Pharmacy": [
+            "Medicinal Chemistry",
+            "Pharmacy",
+            "Biopharmaceutics",
+            "Pharmaceutical Analysis",
+            "Microbiology and Biochemical Pharmacy",
+            "Pharmacology"
+        ]
+    },
+    "Military Science": {
+        "Military Political Work": [
+            "Military Political Work Studies (Level 2 discipline)"
+        ],
+        "Military Logistics": [],
+        "Military logistics and military equipment science": [
+            "Military Logistics",
+            "Rear professional logistics",
+            "Military Equipment Studies"
+        ],
+        "Military Thought and Military History": [
+            "Military Thought",
+            "Military History"
+        ],
+        "Military Equipment Studies": [],
+        "Military Training": [],
+        "Military Systems": [
+            "Military Organization",
+            "Military Management"
+        ],
+        "Military Command": [
+            "Operational Command",
+            "Military Operations Research",
+            "Military Communications",
+            "Military Intelligence",
+            "Cryptology",
+            "Military Education and Training"
+        ],
+        "Campaign Studies": [
+            "Joint Warfare",
+            "Military Service Campaign Studies"
+        ],
+        "Tactics": [
+            "Contract Tactics",
+            "Military tactics"
+        ],
+        "Strategic Studies": [
+            "Military Strategy",
+            "War Mobilisation"
+        ]
+    },
+    "Management Studies": {
+        "Management Science and Engineering": [
+            "Management Science and Engineering (Level 2 discipline)"
+        ],
+        "Public Administration": [
+            "Administrative Management",
+            "Social Medicine and Health Administration",
+            "Education Economics and Management",
+            "Social Security",
+            "Land Resources Management"
+        ],
+        "Agricultural and Forestry Economic Management": [
+            "Agricultural Economic Management",
+            "Forestry Economic Management"
+        ],
+        "Library, Intelligence and Archives Management": [
+            "Librarianship",
+            "Intelligence",
+            "Archival Studies"
+        ],
+        "Industrial Engineering": [],
+        "Business Administration": [
+            "Accounting",
+            "Business Management",
+            "Financial Management",
+            "Marketing",
+            "Human Resource Management",
+            "Tourism Management",
+            "Technology Economics and Management"
+        ],
+        "Tourism Management": [],
+        "Logistics Management and Engineering": [],
+        "E-Commerce": []
+    },
+    "Art Studies": {
+        "Theatre and Film Studies": [],
+        "Fine Art": [],
+        "Art Theory": [],
+        "Design": [],
+        "Music and Dance": [],
+        "Art Studies (Level 1 subject)": [],
+        "Musicology": [],
+        "Design Art": [],
+        "Theatre and Operatic Studies": [],
+        "Film Studies": [],
+        "Radio and Television Arts": [],
+        "Dance Studies": []
+    }
+}
