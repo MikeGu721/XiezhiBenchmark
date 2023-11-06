@@ -12,6 +12,7 @@ from collections import defaultdict
 import transformers
 import numpy as np
 import tqdm
+import torch.nn as nn
 
 
 def get_names(model_name, lora_name, model_cache_dir):
@@ -32,6 +33,17 @@ def get_names(model_name, lora_name, model_cache_dir):
         input_lora_name = None
     return input_model_name, input_lora_name
 
+# def get_causalLM(model_name, model_cache_dir, lora_name, lora_cache_dir, load_in_8bit=False):
+#     model = AutoModelForCausalLM.from_pretrained(
+#         model_name,
+#         torch_dtype=torch.float16,
+#         cache_dir=model_cache_dir,
+#         trust_remote_code=True,
+#         device_map = 'auto'
+#     )
+#     model.eval()
+#     tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=model_cache_dir, trust_remote_code=True)
+#     return model, tokenizer
 
 def get_causalLM(model_name, model_cache_dir, lora_name, lora_cache_dir, load_in_8bit=False):
     causalLM = \
@@ -42,13 +54,12 @@ def get_causalLM(model_name, model_cache_dir, lora_name, lora_cache_dir, load_in
                         AutoModelForCausalLM
 
     device_map = 'balanced_low_0'
-    # device_map = 'auto'
     if model_cache_dir:
         model = causalLM.from_pretrained(model_name, cache_dir=model_cache_dir,
                                          torch_dtype=torch.float16, device_map='auto',
                                          load_in_8bit=load_in_8bit, trust_remote_code=True)
     else:
-        model = causalLM.from_pretrained(model_name, torch_dtype=torch.float16, cache_dir='../LLM/CACHE_DIR',
+        model = causalLM.from_pretrained(model_name, torch_dtype=torch.float16, cache_dir=model_cache_dir,
                                          device_map='auto', load_in_8bit=load_in_8bit,
                                          trust_remote_code=True)
     if 'none' in str(lora_name).lower(): lora_name = None
@@ -65,9 +76,9 @@ def get_causalLM(model_name, model_cache_dir, lora_name, lora_cache_dir, load_in
     model.half()
     model.eval()
     if 'llama' not in model_name.lower():
-        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, cache_dir='../LLM/CACHE_DIR')
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, cache_dir=model_cache_dir)
     else:
-        tokenizer = LlamaTokenizer.from_pretrained(model_name, trust_remote_code=True, cache_dir='../LLM/CACHE_DIR')
+        tokenizer = LlamaTokenizer.from_pretrained(model_name, trust_remote_code=True, cache_dir=model_cache_dir)
     tokenizer.padding_side = 'left'
 
     if 'chatglm' not in model_name.lower():
@@ -86,56 +97,54 @@ def setup_seed(seed):
 
 
 class TestDataset(Dataset):
-    def __init__(self, ids=None, data=None):
+    def __init__(self, ids=None, data=None,answers=None,labels=None):
         super().__init__()
-        self.ids, self.input = [], []
+        self.ids, self.input, self.answer, self.labels = [], [], [], []
         if ids:
-            self.extend(ids, data)
+            self.extend(ids, data, answers, labels)
 
-    def append(self, id, data):
+    def append(self, id, data, answer,label):
         self.ids.append(id)
         self.input.append(data)
+        self.answer.append(answer)
+        self.labels.append(label)
 
-    def extend(self, ids, data):
+    def extend(self, ids, data, answer,label):
         self.ids.extend(ids)
         self.input.extend(data)
+        self.answer.extend(answer)
+        self.labels.extend(label)
+
 
     def empty(self):
         del (self.ids)
         del (self.input)
-        self.ids, self.input = [], []
+        del (self.answer)
+        del (self.labels)
+        self.ids, self.input, self.answer, self.labels = [], [], [], []
 
     def __len__(self):
         return len(self.input)
 
     def __getitem__(self, item):
-        return self.ids[item], self.input[item]
+        return self.ids[item], self.input[item], self.answer[item], self.labels[item]
+
+    def end_at(self, end_index):
+        self.ids = self.ids[:end_index]
+        self.input = self.input[:end_index]
+        self.answer = self.answer[:end_index]
+        self.labels = self.labels[:end_index]
 
     def start_from(self, start_index):
-        self.ids = self.ids[start_index:]  # 此处start_index要除去只有\n的这种行
+        self.ids = self.ids[start_index:]
         self.input = self.input[start_index:]
+        self.answer = self.answer[start_index:]
+        self.labels = self.labels[start_index:]
 
 
-def hitk(pred, result, k):
-    try:
-        pred_arg = list(np.argsort(pred))[::-1]
-        if result in pred_arg[:k]:
-            return 1
-        else:
-            return 0
-    except:
-        return 0
 
 
-def mrr(pred, result):
-    try:
-        pred_arg = list(np.argsort(pred)[::-1])
-        return 1 / (pred_arg.index(result) + 1)
-    except:
-        return 0
-
-
-class ModelTester:
+class ModelEvaluator:
     def __init__(self):
         self.start_time = time.time()
         pass
@@ -151,7 +160,7 @@ class ModelTester:
         '''
         data, labels = [], set()
         all_options = []
-        dirs = [os.path.join('tasks', self.task)]
+        dirs = [os.path.join('tasks','test', self.task)]
         index = 0
         while (index < len(dirs)):
             dirr = dirs[index]
@@ -184,13 +193,9 @@ class ModelTester:
             data[index] = (idx, question, options[:self.options_num], answer, labels)
 
         if self.few_shot > 0:
-            label2examples = self.get_traindata(os.path.join('tasks', 'ceval_train'))
-        answer_datasets = TestDataset()
-        for id, question, options, answer, label in tqdm.tqdm(data, ncols=80,
-                                                              desc='reading data, construct answer dataset'):
-            answer_datasets.append(id, (answer, label))
+            label2examples = self.get_traindata(os.path.join('tasks', 'train', 'ceval_train'))
         if self.sample_num > 0: data = random.sample(data, k=min(len(data), self.sample_num))
-        infer_datasets = TestDataset()
+        infer_dataset = TestDataset()
         if input_template:
             for id, question, options, answer, labels in tqdm.tqdm(data, ncols=80,
                                                                    desc='reading data, construct infer dataset'):
@@ -198,11 +203,13 @@ class ModelTester:
 
                 if few_shot == 0:  # 就正常地进行一个加
                     for opt in options:
-                        infer_datasets.append(id,
-                                              input_template.format(question=question,
+                        infer_dataset.append(id,
+                                            input_template.format(question=question,
                                                                     options='\n'.join(options),
                                                                     answer=opt,
-                                                                    eos=eos_mark))
+                                                                    eos=eos_mark),
+                                            answer,
+                                            '[SEP]'.join(labels))
 
                 else:
                     labels = sorted(labels, key=lambda x: len(x), reverse=True)  # 长的label可能是细粒度的
@@ -220,16 +227,19 @@ class ModelTester:
                         if mark: break  # 一个example都加不进去了
 
                     for opt in options:
-                        infer_datasets.append(id,
-                                              input_template.format(question=question,
+                        infer_dataset.append(id,
+                                            input_template.format(question=question,
                                                                     options='\n'.join(options),
                                                                     answer=opt,
                                                                     demonstrations='\n\n'.join(
                                                                         ['Demonstation %d:\n%s' % (i, j) for i, j in
                                                                          enumerate(demons[:self.few_shot])]),
                                                                     # TODO：考虑下中文prompt
-                                                                    eos=eos_mark))
-        return infer_datasets, answer_datasets, labels
+                                                                    eos=eos_mark),
+                                             answer,
+                                             '[SEP]'.join(labels))
+
+        return infer_dataset
 
     def get_mmlu(self, input_template=None, eos_mark=''):
         '''
@@ -239,7 +249,7 @@ class ModelTester:
         '''
         data, labels = [], set()
         all_options = []
-        dirs = [os.path.join('tasks', self.task)]
+        dirs = [os.path.join('tasks','test', self.task)]
         index = 0
         while (index < len(dirs)):
             dirr = dirs[index]
@@ -271,13 +281,9 @@ class ModelTester:
             data[index] = (idx, question, options[:self.options_num], answer, labels)
 
         if self.few_shot > 0:
-            label2examples = self.get_traindata(os.path.join('tasks', 'mmlu_train'))
-        answer_datasets = TestDataset()
-        for id, question, options, answer, label in tqdm.tqdm(data, ncols=80,
-                                                              desc='reading data, construct answer dataset'):
-            answer_datasets.append(id, (answer, label))
+            label2examples = self.get_traindata(os.path.join('tasks', 'train', 'mmlu_train'))
         if self.sample_num > 0: data = random.sample(data, k=min(len(data), self.sample_num))
-        infer_datasets = TestDataset()
+        infer_dataset = TestDataset()
         if input_template:
             for id, question, options, answer, labels in tqdm.tqdm(data, ncols=80,
                                                                    desc='reading data, construct infer dataset'):
@@ -285,11 +291,13 @@ class ModelTester:
 
                 if few_shot == 0:  # 就正常地进行一个加
                     for opt in options:
-                        infer_datasets.append(id,
-                                              input_template.format(question=question,
+                        infer_dataset.append(id,
+                                            input_template.format(question=question,
                                                                     options='\n'.join(options),
                                                                     answer=opt,
-                                                                    eos=eos_mark))
+                                                                    eos=eos_mark),
+                                            answer,
+                                            '[SEP]'.join(labels))
 
                 else:
                     demons = []
@@ -306,16 +314,17 @@ class ModelTester:
                         if mark: break  # 一个example都加不进去了
 
                     for opt in options:
-                        infer_datasets.append(id,
-                                              input_template.format(question=question,
+                        infer_dataset.append(id,
+                                            input_template.format(question=question,
                                                                     options='\n'.join(options),
                                                                     answer=opt,
                                                                     demonstrations='\n\n'.join(
                                                                         ['Demonstration %d:\n%s' % (i, j) for i, j in
                                                                          enumerate(demons[:self.few_shot])]),
-                                                                    # TODO：考虑下中文prompt
-                                                                    eos=eos_mark))
-        return infer_datasets, answer_datasets, labels
+                                                                    eos=eos_mark),
+                                            answer,
+                                            '[SEP]'.join(labels))
+        return infer_dataset
 
     def get_traindata(self, dirr):
         label2examples = defaultdict(list)
@@ -327,12 +336,12 @@ class ModelTester:
                     jsonline = json.loads(line)
                     labels = jsonline['labels']
                     question = jsonline['question']
-                    options = jsonline['options']
+                    options = jsonline['options'].split('\n')
                     answer = jsonline['answer']
                     if 'eng' in dirr:
-                        example = '### question description:\n```{question}```\n\n### all options:\n```{options}```\n\n### answer:\n```{answer}```'
+                        example = '### question description:\n{question}\n\n### all options:\n{options}\n\n### answer:\n{answer}'
                     else:
-                        example = '### 问题描述:\n```{question}```\n\n### 所有选项:\n```{options}```\n\n### 答案:\n```{answer}```'
+                        example = '### 问题描述:\n{question}\n\n### 所有选项:\n{options}\n\n### 答案:\n{answer}'
                     example = example.format(question=question, options='\n'.join(options), answer=answer)
 
                     for label in labels:
@@ -350,7 +359,7 @@ class ModelTester:
                     answer = csvline[5]
                     answer = {'a': 0, 'b': 1, 'c': 2, 'd': 3}.get(answer.lower(), -1)
 
-                    example = '### question description:\n```{question}```\n\n### all options:\n```{options}```\n\n### answer:\n```{answer}```'
+                    example = '### question description:\n{question}\n\n### all options:\n{options}\n\n### answer:\n{answer}'
                     example = example.format(question=question, options='\n'.join(options), answer=options[answer])
 
                     label2examples[label].append(example)
@@ -366,7 +375,7 @@ class ModelTester:
                     options = [opt.strip().strip('"').strip("'") for opt in csvline[2:6]]
                     answer = csvline[6]
                     answer = {'a': 0, 'b': 1, 'c': 2, 'd': 3}.get(answer.lower(), -1)
-                    example = '### 问题描述:\n```{question}```\n\n### 所有选项:\n```{options}```\n\n### 答案:\n```{answer}```'
+                    example = '### 问题描述:\n{question}\n\n### 所有选项:\n{options}\n\n### 答案:\n{answer}'
                     example = example.format(question=question, options='\n'.join(options), answer=options[answer])
 
                     label2examples[label].append(example)
@@ -379,8 +388,9 @@ class ModelTester:
         :return:
         '''
         data, all_labels, all_options = [], [], []
-        dirs = [os.path.join('tasks', self.task)]
+        dirs = [os.path.join('tasks','test', self.task)]
         index = 0
+        # load data to variable data, all_labels and all_options
         while (index < len(dirs)):
             dirr = dirs[index]
             for raw_fd in os.listdir(dirr):
@@ -389,9 +399,8 @@ class ModelTester:
                     jsonfile = open(fd, encoding='utf-8')
                     for jsonline in jsonfile:
                         jsonline = json.loads(jsonline)
-
                         question = jsonline['question']
-                        options = [opt.strip().strip('"').strip("'") for opt in jsonline['options']]
+                        options = [opt.strip().strip('"').strip("'") for opt in jsonline['options'].split('\n')]
                         all_options.extend(options)
                         if jsonline['answer'].strip().strip('"').strip("'") not in options:
                             continue
@@ -403,6 +412,7 @@ class ModelTester:
                 elif os.path.isdir(fd):
                     dirs.append(fd)
             index += 1
+        # add more options to data until #options == options_num
         all_options = list(set(all_options))
         for index, (idx, question, options, answer, labels) in enumerate(data):
             while (len(options) < self.options_num):
@@ -413,26 +423,25 @@ class ModelTester:
 
         if self.few_shot > 0:
             if 'eng' in self.task:
-                label2examples = self.get_traindata(os.path.join('tasks', 'xiezhi_train_eng'))
+                label2examples = self.get_traindata(os.path.join('tasks', 'train', 'xiezhi_train_eng'))
             else:
-                label2examples = self.get_traindata(os.path.join('tasks', 'xiezhi_train_chn'))
+                label2examples = self.get_traindata(os.path.join('tasks', 'train', 'xiezhi_train_chn'))
 
-        answer_datasets = TestDataset()
-        for id, question, options, answer, label in tqdm.tqdm(data, ncols=80,
-                                                              desc='reading data, construct answer dataset'):
-            answer_datasets.append(id, (answer, label))
+        # if random_seed is fixed, the id of answer will be the same to the question id
         if self.sample_num > 0: data = random.sample(data, k=min(len(data), self.sample_num))
-        infer_datasets = TestDataset()
+        infer_dataset = TestDataset()
         if input_template:
             for id, question, options, answer, labels in tqdm.tqdm(data, ncols=80,
                                                                    desc='reading data, construct infer dataset'):
                 if few_shot == 0:  # 就正常地进行一个加
                     for opt in options:
-                        infer_datasets.append(id,
+                        infer_dataset.append(id,
                                               input_template.format(question=question,
                                                                     options='\n'.join(options),
                                                                     answer=opt,
-                                                                    eos=eos_mark))
+                                                                    eos=eos_mark),
+                                              answer,
+                                              '[SEP]'.join(labels))
 
                 else:
                     labels = sorted(labels, key=lambda x: len(x), reverse=True)  # 长的label可能是细粒度的
@@ -448,83 +457,33 @@ class ModelTester:
                             mark = False
                             index += 1
                         if mark: break  # 一个example都加不进去了
-
                     for opt in options:
-                        infer_datasets.append(id,
+                        infer_dataset.append(id,
                                               input_template.format(question=question,
                                                                     options='\n'.join(options),
                                                                     answer=opt,
                                                                     demonstrations='\n\n'.join(
                                                                         ['Demonstation %d:\n%s' % (i, j) for i, j in
                                                                          enumerate(demons[:self.few_shot])]),
-                                                                    # TODO：考虑下中文prompt
-                                                                    eos=eos_mark))
-        return infer_datasets, answer_datasets, set(all_labels)
+                                                                    eos=eos_mark),
+                                              answer,
+                                              '[SEP]'.join(labels)
+                                              )
+        return infer_dataset
 
-    def get_m3ke(self, input_template=None, eos_mark=''):
-        '''
-        获得獬豸评估数据集
-        :param input_template:
-        :return:
-        '''
-        data, all_labels, all_options = [], [], []
-        dirs = [os.path.join('tasks', self.task)]
-        index = 0
-        while (index < len(dirs)):
-            dirr = dirs[index]
-            for raw_fd in os.listdir(dirr):
-                fd = os.path.join(dirr, raw_fd)
-                if fd.endswith('xlsx'):
-                    excelfile = pd.read_excel(fd)
-                    for value in excelfile.values:
-                        question = value[0]
-                        options = [str(opt).strip().strip('"').strip("'") for opt in value[1:5]]
-                        all_options.extend(options)
-                        answer = value[5]
-                        answer = {'a': 0, 'b': 1, 'c': 2, 'd': 3}.get(answer.lower(), -1)
-                        if answer == -1: continue
-                        if answer >= self.options_num: continue
-                        labels = [str(raw_fd).split('.xlsx')[0]]
-
-                        data.append((len(data), question, options, answer, labels))
-                        all_labels.extend(labels)
-                elif os.path.isdir(fd):
-                    dirs.append(fd)
-            index += 1
-        all_options = list(set(all_options))
-        for index, (idx, question, options, answer, labels) in enumerate(data):
-            while (len(options) < self.options_num):
-                opt = random.sample(all_options, k=1)[0]
-                if opt in options: continue
-                options.append(opt)
-            options = options[:self.options_num]
-            data[index] = (idx, question, options, answer, labels)
-
-        answer_datasets = TestDataset()
-        for id, question, options, answer, label in tqdm.tqdm(data, ncols=80, desc='reading data'):
-            answer_datasets.append(id, (answer, label))
-        if self.sample_num > 0: data = random.sample(data, k=min(len(data), self.sample_num))
-        infer_datasets = TestDataset()
-        if input_template:
-            for id, question, options, answer, label in tqdm.tqdm(data, ncols=80, desc='reading data'):
-                for opt in options:
-                    infer_datasets.append(id,
-                                          input_template.format(question=question, options='\n'.join(options),
-                                                                answer=opt, eos=eos_mark))
-        return infer_datasets, answer_datasets, set(all_labels)
-
-    def test(self, task, model_name, model_cache_dir, lora_name, lora_cache_dir,
-             re_inference=True, metric='hit1', result_path='./check_result.json', batch_size=1,
-             sample_num=-1,
-             input_template='### 问题描述:\n{question}\n\n### 所有选项:\n{options}\n\n### 答案:\n{answer}',
-             random_seed=42,
-             few_shot=0, options_num=4, temperature=0.1, topk=40, topp=1, num_beams=1, max_new_tokens=1, model=None,
-             tokenizer=None, **kwargs):
+    def evaluate(self, task, model_name, model_cache_dir, lora_name, lora_cache_dir,
+                 result_path='./check_result.json',
+                 batch_size=1,
+                 sample_num=-1,
+                 input_template='### 问题描述:\n{question}\n\n### 所有选项:\n{options}\n\n### 答案:\n{answer}',
+                 random_seed=42,
+                 few_shot=0, options_num=4, temperature=0.1, topk=40, topp=1, num_beams=1, max_new_tokens=1, model=None,
+                 tokenizer=None,
+                 **kwargs):
         '''
         :param task:
         :param model_dir:
         :param re_inference:
-        :param metric:
         :param result_path:
         :param batch_size:
         :param random_seed:
@@ -536,8 +495,6 @@ class ModelTester:
         :param num_beams:
         :return:
         '''
-        assert metric.startswith('hit') or metric in ['acc', 'mrr']
-        if metric == 'acc': metric = 'hit1'
         setup_seed(random_seed)
 
         self.task = task
@@ -545,7 +502,6 @@ class ModelTester:
         self.model_cache_dir = model_cache_dir
         self.lora_name = lora_name
         self.lora_cache_dir = lora_cache_dir
-        self.metric = metric
         self.batch_size = batch_size
         self.few_shot = few_shot
         self.sample_num = sample_num
@@ -555,7 +511,7 @@ class ModelTester:
         self.max_new_tokens = max_new_tokens
         self.num_beams = num_beams
         self.options_num = options_num
-
+        self.result_path = result_path
         self.model = model
         self.tokenizer = tokenizer
 
@@ -566,90 +522,67 @@ class ModelTester:
             num_beams=num_beams,
             **kwargs
         )
-        # 任务标识符
-        self.UID = '%s_%s_%s_%s_%s_%s' % (
-            model_name, lora_name, task, few_shot, options_num, random_seed)
-        self.UID = self.UID.replace('/', '').replace('\\', '')
-        if not os.path.exists(result_path):
-            os.makedirs(result_path)
-        self.result_path = os.path.join(result_path, self.UID + '.json')
-        print('### You\'re using task: %s' % self.task)
-        print('### Mission UID: %s' % self.UID)
-
-        if re_inference:
-            # 推理到了从哪条数据开始继续推理
-            self.start_index = 0
-            if os.path.exists(self.result_path):
-                self.start_index = len([i for i in open(self.result_path, encoding='utf-8') if i.strip()])
-            else:
-                open(self.result_path, 'w', encoding='utf-8')
+        # load existing log data
+        self.start_index = 0  # a index represent one sample, not only one option
+        if os.path.exists(self.result_path):
+            self.start_index = len(open(self.result_path,encoding='utf-8').readlines())
+        else:
+            open(self.result_path, 'w', encoding='utf-8')
+        if self.start_index < self.sample_num or self.sample_num<0:
             self.fw = open(self.result_path, 'a', encoding='utf-8')
             self._infer(input_template)
             self.fw.close()
-
-        if not os.path.exists(self.result_path): return {}, {}
-        # 历史遗留问题，需要规整下模型的输出结果
-        temp = [json.loads(line) for line in open(self.result_path, encoding='utf-8')]
-        id2pred = {}
-        for id, score, output in temp:
-            if type(id) == str and 'tensor' in id:
-                id = id.strip('tensor()')
-            if int(id) not in id2pred:
-                id2pred[int(id)] = [[], []]
-            id2pred[int(id)][0].append(score)
-            id2pred[int(id)][1].append(output)
-        id2result, label2result = self._verify(id2pred)
-        return id2result, label2result
+        return self.result_path
 
     def _infer(self, input_template: str, load_in_8bit=False):
-        if not self.model:
-            if 'models--' in self.model_cache_dir:
-                model, tokenizer = get_causalLM(self.model_cache_dir, None, self.lora_cache_dir, None, load_in_8bit)
-            else:
-                try:
-                    model, tokenizer = get_causalLM(self.model_name, self.model_cache_dir, self.lora_name,
-                                                    self.lora_cache_dir,
-                                                    load_in_8bit)
-                except:
-                    input_model_name, input_lora_name = get_names(model_name, lora_name, self.model_cache_dir)
-                    model, tokenizer = get_causalLM(input_model_name, None, input_lora_name, None,
-                                                    load_in_8bit)
-        else:
-            model = self.model
-            tokenizer = self.tokenizer
+        model, tokenizer = get_causalLM(self.model_name, self.model_cache_dir, self.lora_name,self.lora_cache_dir,load_in_8bit)
         eos_mark = tokenizer.decode(tokenizer.eos_token_id)
-        datasets, _, _ = self._get_data(input_template, eos_mark)
-        datasets.start_from(self.start_index)
+
+        # load benchmark
+        datasets = self._get_data(input_template, eos_mark)
+        if self.sample_num>=0:
+            datasets.end_at(self.sample_num*self.options_num)
+        datasets.start_from(self.start_index*self.options_num)
+
         self.print_time()
-        print('### Start From %d Sample' % self.start_index)
+        print('### Start From %d Sample' % int(self.start_index + 1))
+        print('### End At %d Sample' % self.sample_num)
         print('### Samples Number:', len(datasets) // self.options_num)
         dataloader = DataLoader(datasets, shuffle=False, batch_size=self.batch_size)
+
+        criterion = nn.CrossEntropyLoss(reduction='none')
+        save_sample = None
         with torch.no_grad():
-            for ids, inputs in tqdm.tqdm(dataloader, ncols=80,
-                                         desc='infering on task: %s in %d-shot setting' % (self.task, self.few_shot)):
-                try:
-                    input_ids = tokenizer(inputs, return_tensors='pt', padding=True)['input_ids'].to('cuda')
-                    generation_output = model.generate(
-                        input_ids=input_ids,
-                        generation_config=self.generation_config,
-                        return_dict_in_generate=True,
-                        pad_token_id=model.config.pad_token_id,
-                        eos_token_id=model.config.eos_token_id,
-                        bos_token_id=model.config.bos_token_id,
-                        output_scores=True,
-                        max_new_tokens=max_new_tokens)
+            for ids, inputs, answers, labels in tqdm.tqdm(dataloader, ncols=80, desc='### Infering Task: %s In %d-shot Setting:' % (self.task, self.few_shot)):
+                # for input, answer, label in zip(inputs, answers, labels):
+                #     print('\n\nInput:\n')
+                #     print(input)
+                #     print('\n\nAnswer:\n')
+                #     print(answer.item())
+                #     print('\n\nLabel:\n')
+                #     print(label)
+                #     print('==='*30)
+                #     print('==='*30)
+                tokenized_result = tokenizer(inputs, return_tensors='pt', padding=True)
+                input_ids = tokenized_result['input_ids'].to('cuda')
 
-                    scores = generation_output.sequences_scores
-                    scores = scores.detach().cpu().numpy().tolist()
-                    ss = generation_output.sequences
-                    outputs = [tokenizer.decode(s) for s in ss]
-                except:
-                    scores = [-1 for i in range(len(ids))]
-                    outputs = ['error' for i in range(len(ids))]
-                    # 输出模型结果
-                for id, score, output in zip(ids, scores, outputs):
-                    self.fw.write(json.dumps([int(id), score, output], ensure_ascii=False) + '\n')
+                outputs = model.forward(input_ids=input_ids)
+                loss = criterion(outputs.logits.view(-1, outputs.logits.size(-1)), input_ids.view(-1))
+                scores = torch.mean(loss.reshape(input_ids.shape), dim=0).detach().cpu().numpy().tolist()
 
+                # 输出每满一个 self.options_num 则保存一下
+                for id, score, answer, label in zip(ids, scores, answers, labels):
+                    if not save_sample or id != save_sample['line_index']:
+                        if save_sample and save_sample['options']:
+                            self.fw.write(json.dumps(save_sample, ensure_ascii=False) + '\n')
+                        save_sample = {'line_index': int(id),
+                                       'options': [],
+                                       'labels': label.split('[SEP]'),
+                                       'answer': int(str(answer).strip('tensor()'))
+                                       }
+                    save_sample['options'].append(-score)
+        if save_sample['options']:
+            self.fw.write(json.dumps(save_sample, ensure_ascii=False) + '\n')
         # 清空显存
         torch.cuda.empty_cache()
 
@@ -665,58 +598,32 @@ class ModelTester:
             return self.get_mmlu(input_template=input_template, eos_mark=eos_mark)
         elif self.task.startswith('xiezhi'):
             return self.get_xiezhi(input_template=input_template, eos_mark=eos_mark)
-        elif self.task == 'm3ke':
-            return self.get_m3ke(input_template=input_template, eos_mark=eos_mark)
 
-    def _verify(self, id2pred):
-        id2result = {}
-        label2result = defaultdict(list)
-        _, label_dataset, all_labels = self._get_data()
-        self.print_time()
-        print('### Label Number:', len(all_labels))
-        for id, (answer, labels) in tqdm.tqdm(label_dataset, ncols=80, desc='verifying'):
-            if type(id) == str and 'tensor' in id:
-                id = id.strip('tensor()')
-            if int(id) not in id2pred: continue
-            if self.metric.startswith('hit'):
-                ans = hitk(id2pred[int(id)][0], answer, int(self.metric.split('hit')[-1]))
-            elif self.metric.startswith('mrr'):
-                ans = mrr(id2pred[id][0], answer)
-            id2result[id] = ans
-            for label in labels:
-                label2result[label].append(ans)
-        label2result = {label: {'mean': np.mean(label2result[label]), 'std': np.std(label2result[label]),
-                                'num': len(label2result[label])} for label in
-                        label2result}
-        return id2result, label2result
 
 
 if __name__ == '__main__':
-    cn_multiple_choice_template = '### 问题描述:\n```{question}```\n\n### 所有选项:\n```{options}```\n\n### 答案:\n```{answer}``` {eos}'
-    en_multiple_choice_template = '### question description:\n```{question}```\n\n### all options:\n```{options}```\n\n### answer:\n```{answer}``` {eos}'
-    cn_multiple_choice_demonstration_template = '\n```{demonstrations}```\n\n### 问题描述:\n```{question}```\n\n### 所有选项:\n```{options}```\n\n### 答案:\n```{answer}``` {eos}'
-    en_multiple_choice_demonstration_template = '```{demonstrations}```\n\n### question description:\n```{question}```\n\n### all options:\n```{options}```### answer:\n```{answer}``` {eos}'
 
     import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', '-t',
                         default=
-                        ['ceval', 'mmlu', 'm3ke', 'xiezhi_inter_chn', 'xiezhi_spec_chn', 'xiezhi_inter_eng', 'xiezhi_spec_eng'][
-                            4])
-    parser.add_argument('--model_name', '-mn', default='bigscience/bloomz-7b1')
-    parser.add_argument('--model_cache_dir', '-mc', default='../LLM/CACHE_DIR')
+                        ['ceval', 'mmlu', 'xiezhi_inter_chn', 'xiezhi_spec_chn', 'xiezhi_inter_eng',
+                         'xiezhi_spec_eng'][
+                            1])
+    parser.add_argument('--model_name', '-mn', default='THUDM/chatglm3-6b')
+    parser.add_argument('--model_cache_dir', '-mc', default='../../CACHE_DIR')
     parser.add_argument('--lora_name', '-ln', default=None)
-    parser.add_argument('--lora_cache_dir', '-lc', default='../LLM/CACHE_DIR')
-    parser.add_argument('--sample_num', '-sn', default=1000, type=int)
-    parser.add_argument('--language', '-lang', default='chn', type=str)
+    parser.add_argument('--lora_cache_dir', '-lc', default='../../CACHE_DIR')
+    parser.add_argument('--sample_num', '-sn', default=-1, type=int)
+    parser.add_argument('--language', '-lang', default='eng', type=str)
     parser.add_argument('--batch_size', '-bs', default=8, type=int)
-    parser.add_argument('--options_num', '-on', default=4, type=int)
-    parser.add_argument('--re_inference', '-infer', default=True, type=bool)
+    parser.add_argument('--options_num', '-on', default=8, type=int)
+    parser.add_argument('--need_inference', '-infer', default=True, type=bool)
     parser.add_argument('--result_path', '-path', default='./output_results/check_result')
     parser.add_argument('--metric', '-m', default='hit1')
     parser.add_argument('--random_seed', '-rs', default=42, type=int)
-    parser.add_argument('--few_shot', '-fs', default=0, type=int)
+    parser.add_argument('--few_shot', '-fs', default=2, type=int)
     parser.add_argument('--temperature', '-tmp', default=0.1, type=float)
     parser.add_argument('--topk', '-pk', default=40, type=int)
     parser.add_argument('--topp', '-pp', default=1, type=float)
@@ -735,7 +642,7 @@ if __name__ == '__main__':
     language = args.language
     batch_size = args.batch_size
     options_num = args.options_num
-    re_inference = args.re_inference
+    need_inference = args.need_inference
     result_path = args.result_path
     metric = args.metric
     random_seed = args.random_seed
@@ -746,28 +653,48 @@ if __name__ == '__main__':
     num_beams = args.num_beams
     max_new_tokens = args.max_new_tokens
 
-    if few_shot > 0 and language == 'chn':  # 只有xiezhi提供few shot demonstration
-        input_template = cn_multiple_choice_demonstration_template
-    elif few_shot > 0 and language == 'eng':  # 只有xiezhi提供few shot demonstration
-        input_template = en_multiple_choice_demonstration_template
-    elif language == 'chn':
-        input_template = cn_multiple_choice_template
-    elif language == 'eng':
-        input_template = en_multiple_choice_template
-    else:
-        input_template = en_multiple_choice_template  # 其他的待定
+    UID = '%s_%s_%s_%s_%s_%s' % (model_name, lora_name, task, few_shot, options_num, random_seed)
+    UID = UID.replace('/', '').replace('\\', '')
+    if not os.path.exists(result_path):
+        os.makedirs(result_path)
+    check_result_path = os.path.join(result_path, UID + '.json')
+    print('### You\'re using task: %s' % task)
+    print('### Mission UID: %s' % UID)
+    if need_inference:
 
-    Tester = ModelTester()
-    id2result, label2result = Tester.test(task, model_name, model_cache_dir, lora_name, lora_cache_dir,
-                                          re_inference, metric, result_path, batch_size, sample_num,
-                                          input_template, random_seed, few_shot,
-                                          options_num, temperature, topk, topp, num_beams, max_new_tokens)
+        # prepare prompts
+        cn_multiple_choice_template = '下面请你作为一个答题者，回答一道选择题。我会在“问题描述”中描述这道问题是什么、“所有选项”中列出所有可以选择的选项、请你将你认为正确的选项输出在“答案”后面。请你将你认为正确的选项内容进行输出，不要输出多余的内容。\n\n### 问题描述:\n{question}\n\n### 所有选项:\n{options}\n\n### 答案:\n{answer} {eos}'
+        en_multiple_choice_template = 'Below you will be asked to answer a multiple choice question as a respondent. I will describe what the question is in the "Question Description", list all available options in the "All Options", and ask you to output the option you think is correct after the "Answer" field. Please do not output any extra content, only output the text of the option which you think is right. \n\n### question description:\n{question}\n\n### all options:\n{options}\n\n### answer:\n{answer} {eos}'
+        cn_multiple_choice_demonstration_template = '下面请你作为一个答题者，回答一道选择题。我会在“问题描述”中描述这道问题是什么、“所有选项”中列出所有可以选择的选项、请你将你认为正确的选项输出在“答案”后面。我会在前面给你几个例子，并用“Demonstration”符号进行标记，请你根据给出的例子的格式和可以借鉴的信息，只回答最后一题。请你将你认为正确的选项内容进行输出，不要输出多余的文本。\n\n{demonstrations}\n\nQuestion:\n### 问题描述:\n{question}\n\n### 所有选项:\n{options}\n\n### 答案:\n{answer} {eos}'
+        en_multiple_choice_demonstration_template = 'Below you will be asked to answer a multiple choice question as a respondent. I will describe what the question is in the "Question Description", list all available options in the "All Options", and ask you to output the option you think is correct after the "Answer" field. I will give you a few examples up front, marked with the "Demonstration" word. You only need to answer the last question. Please follow the format of the examples given and draw on all the possible information in the example to raise the chance to correctly answer the question. Please do not output any extra content, only output the text of the option which you think is right. \n\n{demonstrations}\n\nQuestion:\n### question description:\n{question}\n\n### all options:\n{options}\n\n### answer:\n{answer} {eos}'
+        if few_shot > 0 and language == 'chn':  # 只有xiezhi提供few shot demonstration
+            input_template = cn_multiple_choice_demonstration_template
+        elif few_shot > 0 and language == 'eng':  # 只有xiezhi提供few shot demonstration
+            input_template = en_multiple_choice_demonstration_template
+        elif language == 'chn':
+            input_template = cn_multiple_choice_template
+        elif language == 'eng':
+            input_template = en_multiple_choice_template
+        else:
+            input_template = en_multiple_choice_template  # 其他的待定
 
-    output = {}
-    for label in label2result:
-        output[label] = label2result.get(label, 'NONE')
-    output['OVERALL'] = {'mean': np.mean([i[1] for i in id2result.items()]),
-                         'std': np.std([i[1] for i in id2result.items()])}
-    [print(label, output[label]) for label in output]
-    open('./results/%s_result.json' % task, 'w', encoding='utf-8').write(
-        json.dumps(output, ensure_ascii=False, indent=4))
+        # Prepare Evaluator
+        Evaluator = ModelEvaluator()
+        # Start Evaluation
+        check_result_path = Evaluator.evaluate(task, model_name, model_cache_dir, lora_name, lora_cache_dir,
+                        check_result_path, batch_size, sample_num,
+                        input_template, random_seed, few_shot,
+                        options_num, temperature, topk, topp, num_beams, max_new_tokens)
+
+    from conclude import *
+
+    label2result = get_evaluation_result_from_check_path(check_result_path)
+    label2hitk = get_hitk_result(label2result, int(metric.strip('hit')))
+    label2mrr = get_mrr_result(label2result)
+
+    for label in label2hitk:
+        if label2mrr[label]['num'] < 200: continue
+        print('Label: %s, Hit@4: %.3f, MRR: %.3f, Num: %d'%(label, label2hitk[label]['mean'], label2mrr[label]['mean'], label2mrr[label]['num']))
+
+
+
