@@ -7,7 +7,7 @@ def get_evaluation_result_from_check_path(check_path):
     label2result = collections.defaultdict(list)
     for line in f:
         jsonline = json.loads(line)
-        answer_rank = np.argsort(jsonline['options']).tolist()[::-1].index(int(jsonline['answer']))
+        answer_rank = np.argsort(jsonline['options']).tolist().index(int(jsonline['answer']))
         for label in jsonline['labels']:
             label2result[label].append(answer_rank)
         label2result['OVERALL'].append(answer_rank)
@@ -17,7 +17,7 @@ def get_evaluation_result_from_check_path(check_path):
 def get_hitk_result(label2result, k):
     label2hitk = {}
     for label in label2result:
-        cor = [1  if i <k else 0 for i in label2result[label]]
+        cor = [1  if i < k else 0 for i in label2result[label]]
         label2hitk[label] = {'mean':np.mean(cor),'std':np.std(cor),'num':len(cor)}
     return label2hitk
 

@@ -31,7 +31,6 @@ do
           --task=$task \
           --model_name=THUDM/$glm_ver \
           --few_shot=$few_shot \
-          --task=xiezhi_inter_eng \
           --metric=mrr \
           --model_cache_dir=../../CACHE_DIR
       done
