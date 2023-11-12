@@ -13,7 +13,7 @@
 options_nums=(4 8 16 32 50)
 few_shots=(0 1 2 3)
 glm_ver=(chatglm-6b chatglm2-6b chatglm3-6b)
-task=(ceval mmlu)
+task=(ceval mmlu xiezhi_inter_chn xiezhi_spec_chn xiezhi_inter_eng xiezhi_spec_eng)
 # 两重循环
 for task in ${task[@]}
 do
@@ -24,7 +24,7 @@ do
       for few_shot in ${few_shots[@]}
       do
             # 执行你的代码
-        python evaluate.py \
+        python ./Knowledge_Evaluator/xiezhi_evaluate.py \
           --sample_num=-1 \
           --options_num=$options_num \
           --language=chn \
@@ -32,7 +32,7 @@ do
           --model_name=THUDM/$glm_ver \
           --few_shot=$few_shot \
           --metric=mrr \
-          --model_cache_dir=../../CACHE_DIR
+          --model_cache_dir=../CACHE_DIR
       done
     done
   done

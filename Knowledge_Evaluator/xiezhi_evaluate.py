@@ -160,7 +160,7 @@ class ModelEvaluator:
         '''
         data, labels = [], set()
         all_options = []
-        dirs = [os.path.join('tasks','test', self.task)]
+        dirs = [os.path.join('Tasks', 'Knowledge', 'Benchmarks', 'test', self.task)]
         index = 0
         while (index < len(dirs)):
             dirr = dirs[index]
@@ -193,7 +193,7 @@ class ModelEvaluator:
             data[index] = (idx, question, options[:self.options_num], answer, labels)
 
         if self.few_shot > 0:
-            label2examples = self.get_traindata(os.path.join('tasks', 'train', 'ceval_train'))
+            label2examples = self.get_traindata(os.path.join('Tasks', 'Knowledge', 'Benchmarks', 'train', 'ceval_train'))
         if self.sample_num > 0: data = random.sample(data, k=min(len(data), self.sample_num))
         infer_dataset = TestDataset()
         if input_template:
@@ -249,7 +249,7 @@ class ModelEvaluator:
         '''
         data, labels = [], set()
         all_options = []
-        dirs = [os.path.join('tasks','test', self.task)]
+        dirs = [os.path.join('Tasks', 'Knowledge', 'Benchmarks','test', self.task)]
         index = 0
         while (index < len(dirs)):
             dirr = dirs[index]
@@ -281,7 +281,7 @@ class ModelEvaluator:
             data[index] = (idx, question, options[:self.options_num], answer, labels)
 
         if self.few_shot > 0:
-            label2examples = self.get_traindata(os.path.join('tasks', 'train', 'mmlu_train'))
+            label2examples = self.get_traindata(os.path.join('Tasks', 'Knowledge', 'Benchmarks', 'train', 'mmlu_train'))
         if self.sample_num > 0: data = random.sample(data, k=min(len(data), self.sample_num))
         infer_dataset = TestDataset()
         if input_template:
@@ -388,7 +388,7 @@ class ModelEvaluator:
         :return:
         '''
         data, all_labels, all_options = [], [], []
-        dirs = [os.path.join('tasks','test', self.task)]
+        dirs = [os.path.join('Tasks', 'Knowledge', 'Benchmarks','test', self.task)]
         index = 0
         # load data to variable data, all_labels and all_options
         while (index < len(dirs)):
@@ -423,9 +423,9 @@ class ModelEvaluator:
 
         if self.few_shot > 0:
             if 'eng' in self.task:
-                label2examples = self.get_traindata(os.path.join('tasks', 'train', 'xiezhi_train_eng'))
+                label2examples = self.get_traindata(os.path.join('Tasks', 'Knowledge', 'Benchmarks', 'train', 'xiezhi_train_eng'))
             else:
-                label2examples = self.get_traindata(os.path.join('tasks', 'train', 'xiezhi_train_chn'))
+                label2examples = self.get_traindata(os.path.join('Tasks', 'Knowledge', 'Benchmarks', 'train', 'xiezhi_train_chn'))
 
         # if random_seed is fixed, the id of answer will be the same to the question id
         if self.sample_num > 0: data = random.sample(data, k=min(len(data), self.sample_num))
@@ -549,20 +549,21 @@ class ModelEvaluator:
         print('### End At %d Sample' % self.sample_num)
         print('### Samples Number:', len(datasets) // self.options_num)
         dataloader = DataLoader(datasets, shuffle=False, batch_size=self.batch_size)
-
+        temp_fw = open('temp_file.txt','w',encoding='utf-8')
         criterion = nn.CrossEntropyLoss(reduction='none')
         save_sample = None
         with torch.no_grad():
             for ids, inputs, answers, labels in tqdm.tqdm(dataloader, ncols=80, desc='### Infering Task: %s In %d-shot Setting:' % (self.task, self.few_shot)):
-                # for input, answer, label in zip(inputs, answers, labels):
-                #     print('\n\nInput:\n')
-                #     print(input)
-                #     print('\n\nAnswer:\n')
-                #     print(answer.item())
-                #     print('\n\nLabel:\n')
-                #     print(label)
-                #     print('==='*30)
-                #     print('==='*30)
+                for input, answer, label in zip(inputs, answers, labels):
+                    temp_fw.write('\n\nInput:\n'+'\n'+str(input)+'\n'+'\n\nAnswer:\n'+'\n'+str(answer.item())+'\n'+'\n\nLabel:\n'+'\n'+str(label)+'\n'+'==='*30+'\n'+'==='*30)
+                    # print('\n\nInput:\n')
+                    # print(input)
+                    # print('\n\nAnswer:\n')
+                    # print(answer.item())
+                    # print('\n\nLabel:\n')
+                    # print(label)
+                    # print('==='*30)
+                    # print('==='*30)
                 tokenized_result = tokenizer(inputs, return_tensors='pt', padding=True)
                 input_ids = tokenized_result['input_ids'].to('cuda')
 
@@ -581,7 +582,7 @@ class ModelEvaluator:
                                        'answer': int(str(answer).strip('tensor()'))
                                        }
                     save_sample['options'].append(-score)
-        if save_sample['options']:
+        if save_sample and save_sample['options']:
             self.fw.write(json.dumps(save_sample, ensure_ascii=False) + '\n')
         # 清空显存
         torch.cuda.empty_cache()
@@ -603,24 +604,24 @@ class ModelEvaluator:
 
 if __name__ == '__main__':
 
+
     import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', '-t',
                         default=
                         ['ceval', 'mmlu', 'xiezhi_inter_chn', 'xiezhi_spec_chn', 'xiezhi_inter_eng',
-                         'xiezhi_spec_eng'][
-                            1])
+                         'xiezhi_spec_eng'][1])
     parser.add_argument('--model_name', '-mn', default='THUDM/chatglm3-6b')
-    parser.add_argument('--model_cache_dir', '-mc', default='../../CACHE_DIR')
+    parser.add_argument('--model_cache_dir', '-mc', default='../CACHE_DIR')
     parser.add_argument('--lora_name', '-ln', default=None)
-    parser.add_argument('--lora_cache_dir', '-lc', default='../../CACHE_DIR')
+    parser.add_argument('--lora_cache_dir', '-lc', default='../CACHE_DIR')
     parser.add_argument('--sample_num', '-sn', default=-1, type=int)
     parser.add_argument('--language', '-lang', default='eng', type=str)
-    parser.add_argument('--batch_size', '-bs', default=8, type=int)
+    parser.add_argument('--batch_size', '-bs', default=4, type=int)
     parser.add_argument('--options_num', '-on', default=8, type=int)
     parser.add_argument('--need_inference', '-infer', default=True, type=bool)
-    parser.add_argument('--result_path', '-path', default='./output_results/check_result')
+    parser.add_argument('--result_path', '-path', default='./Knowledge_Evaluator/output_results/check_result')
     parser.add_argument('--metric', '-m', default='hit1')
     parser.add_argument('--random_seed', '-rs', default=42, type=int)
     parser.add_argument('--few_shot', '-fs', default=2, type=int)
@@ -686,15 +687,15 @@ if __name__ == '__main__':
                         input_template, random_seed, few_shot,
                         options_num, temperature, topk, topp, num_beams, max_new_tokens)
 
-    from conclude import *
-
-    label2result = get_evaluation_result_from_check_path(check_result_path)
-    label2hitk = get_hitk_result(label2result, int(metric.strip('hit')))
-    label2mrr = get_mrr_result(label2result)
-
-    for label in label2hitk:
-        if label2mrr[label]['num'] < 200: continue
-        print('Label: %s, Hit@4: %.3f, MRR: %.3f, Num: %d'%(label, label2hitk[label]['mean'], label2mrr[label]['mean'], label2mrr[label]['num']))
+    # from conclude import *
+    #
+    # label2result = get_evaluation_result_from_check_path(check_result_path)
+    # label2hitk = get_hitk_result(label2result, int(metric.strip('hit')))
+    # label2mrr = get_mrr_result(label2result)
+    #
+    # for label in label2hitk:
+    #     if label2mrr[label]['num'] < 200: continue
+    #     print('Label: %s, Hit@4: %.3f, MRR: %.3f, Num: %d'%(label, label2hitk[label]['mean'], label2mrr[label]['mean'], label2mrr[label]['num']))
 
 
 
