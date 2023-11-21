@@ -1,5 +1,5 @@
 ./venv
 .idea
-./Evaluator_Xiezhi/output_results/
-./Evaluator_Xiezhi/results/
 temp_file.txt
+Knowledge_Evaluator/output_results
+Knowledge_Evaluator/results

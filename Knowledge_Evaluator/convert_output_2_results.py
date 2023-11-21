@@ -13,8 +13,8 @@ lora_name = None
 
 model_performance = collections.defaultdict(dict)
 
-for model_name in ['THUDM/chatglm-6b', 'THUDM/chatglm2-6b', 'THUDM/chatglm3-6b']:
-    for benchmark_name in ['ceval']:
+for model_name in ['THUDM/chatglm2-6b', 'THUDM/chatglm3-6b']:
+    for benchmark_name in ['xiezhi_inter_eng']:
         perf = []
         for few_shot_num in [0, 1, 2, 3]:
             for option_num in [4, 8, 16, 32, 50]:
@@ -31,13 +31,13 @@ for model_name in ['THUDM/chatglm-6b', 'THUDM/chatglm2-6b', 'THUDM/chatglm3-6b']
                     model_performance[model_name][few_shot_num] = {}
                 model_performance[model_name][few_shot_num][option_num] = label2hitk['OVERALL']
                 perf.append(float('%.7f'%label2hitk['OVERALL']['mean']))
-        print(perf)
+        print(model_name,perf)
         print(len(perf))
         if len(perf) != 5 * 4:
             print(len(perf))
             continue
         perf = np.array(perf)
-        print(perf.reshape(4, -1))
+        print(model_name,perf.reshape(4, -1))
         sns.heatmap(perf.reshape(4, -1), center=0)
         plt.show()
         plt.clf()
