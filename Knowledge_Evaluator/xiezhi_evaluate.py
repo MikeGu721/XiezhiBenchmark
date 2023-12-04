@@ -536,6 +536,7 @@ class ModelEvaluator:
 
     def _infer(self, input_template: str, load_in_8bit=False):
         model, tokenizer = get_causalLM(self.model_name, self.model_cache_dir, self.lora_name,self.lora_cache_dir,load_in_8bit)
+        self.model_num_params = sum(p.numel() for p in mm.parameters() if p.requires_grad)
         eos_mark = tokenizer.decode(tokenizer.eos_token_id)
 
         # load benchmark
@@ -575,6 +576,7 @@ class ModelEvaluator:
                 for id, score, answer, label in zip(ids, scores, answers, labels):
                     if not save_sample or id != save_sample['line_index']:
                         if save_sample and save_sample['options']:
+                            save_sample['model_parameters'] = self.model_num_params
                             self.fw.write(json.dumps(save_sample, ensure_ascii=False) + '\n')
                         save_sample = {'line_index': int(id),
                                        'options': [],
