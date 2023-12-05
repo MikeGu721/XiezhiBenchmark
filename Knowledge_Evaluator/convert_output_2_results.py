@@ -1,43 +1,60 @@
-import collections
-import json
+'''
+Given:
+option_number
+random_seed
+-->each model performance [Done]
+-->model parameter performance
+
+画图
+1. result_log --> each model performance
+2. result_log --> model parameter performance
+3. result_log --> traditional method model performance
+4. result_log --> model performance with different option number
+5. 【获取model release time】 result_log --> model release time performance
+'''
+
 import os
+import json
 from conclude import *
 
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+result_log_dir = './new_result'
 hitk = 1
-output_path = './output_results/check_result'
+model_performance = {}
 
-random_seed = 42
-lora_name = None
+for file in os.listdir(result_log_dir):
+    model_name = '/'.join(file.split('_')[0].split('--')[1:3])
+    option_number = file.split('_')[-2]
+    few_shot_num = file.split('_')[-3]
+    random_seed = file.split('_')[-1].strip('.json')
+    if 'xiezhi' in file:
+        dataset = '_'.join(file.split('_')[-6:-3])
+    else:
+        dataset = file.split('_')[-4]
 
-model_performance = collections.defaultdict(dict)
+    if model_name not in model_performance:
+        model_performance[model_name] = {}
 
-for model_name in ['THUDM/chatglm2-6b', 'THUDM/chatglm3-6b']:
-    for benchmark_name in ['xiezhi_inter_eng']:
-        perf = []
-        for few_shot_num in [0, 1, 2, 3]:
-            for option_num in [4, 8, 16, 32, 50]:
+    json_file = os.path.join(result_log_dir, file)
+    label2result = get_evaluation_result_from_check_path(json_file)
+    if 'OVERALL' not in label2result: continue
+    label2hitk = get_hitk_result(label2result, hitk)
 
-                UID = '%s_%s_%s_%s_%s_%s' % (
-                model_name.replace('/', ''), lora_name, benchmark_name, few_shot_num, option_num, random_seed)
+    if dataset not in model_performance[model_name]:
+        model_performance[model_name][dataset] = {}
 
-                json_file = os.path.join(output_path, UID + '.json')
-                if not os.path.exists(json_file): continue
-                label2result = get_evaluation_result_from_check_path(json_file)
-                if 'OVERALL' not in label2result: continue
-                label2hitk = get_hitk_result(label2result, hitk)
-                if few_shot_num not in model_performance[model_name]:
-                    model_performance[model_name][few_shot_num] = {}
-                model_performance[model_name][few_shot_num][option_num] = label2hitk['OVERALL']
-                perf.append(float('%.7f'%label2hitk['OVERALL']['mean']))
-        print(model_name,perf)
-        print(len(perf))
-        if len(perf) != 5 * 4:
-            print(len(perf))
-            continue
-        perf = np.array(perf)
-        print(model_name,perf.reshape(4, -1))
-        sns.heatmap(perf.reshape(4, -1), center=0)
-        plt.show()
-        plt.clf()
+    if few_shot_num not in model_performance[model_name][dataset]:
+        model_performance[model_name][dataset][few_shot_num] = {}
+
+    model_performance[model_name][dataset][few_shot_num][option_number] = label2hitk['OVERALL']
+
+
+see_option = '50'
+
+for model_name in model_performance:
+    print()
+    for dataset in model_performance[model_name]:
+        for few_shot_num in model_performance[model_name][dataset]:
+            if see_option in model_performance[model_name][dataset][few_shot_num]:
+                print(model_name, dataset, few_shot_num, model_performance[model_name][dataset][few_shot_num][see_option])
+
